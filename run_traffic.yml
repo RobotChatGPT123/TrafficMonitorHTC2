@@ -1,0 +1,38 @@
+name: Morning Traffic Monitor to HTC
+
+# Wanneer moet dit draaien?
+on:
+  schedule:
+    # Draait om 05:15 en om 14:30 UTC-tijd elke maandag tot en met vrijdag.
+    # Waarschuwing: GitHub gebruikt UTC tijd (Wereldtijd). 
+    # Tijdens onze wintertijd is 05:15 UTC = 06:15 NL, en 14:30 UTC = 15:30 NL.
+    # (In de zomer schuift dit een uurtje op naar 07:15 en 16:30, dus denk daar aan in de lente!)
+    - cron: '15 5 * * 1-5'
+    - cron: '30 14 * * 1-5'
+  
+  workflow_dispatch: 
+
+jobs:
+  monitor-traffic:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run traffic monitor
+      # TomTom is the only secret we need now
+      env:
+        TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
+      run: |
+        python main.py
